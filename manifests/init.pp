@@ -17,7 +17,7 @@
 #	* nginx::site_include (site includes)
 #
 # Templates:
-# 	- nginx.conf.erb => /etc/nginx/nginx.conf
+#		- nginx.conf.erb => /etc/nginx/nginx.conf
 #
 $nginx_includes = "/etc/nginx/includes"
 $nginx_conf = "/etc/nginx/conf.d"
@@ -31,21 +31,21 @@ class nginx {
 	package { nginx: ensure => installed }
 
 	service { nginx:
-        	ensure => running,
-        	enable => true,
+		ensure => running,
+		enable => true,
 		hasrestart => true,
 		require => File["/etc/nginx/nginx.conf"],
 	}
 
-        file { "/etc/nginx/nginx.conf":
-		ensure 	=> present,
-		mode 	=> 644,
-		owner 	=> root,
-		group 	=> root,
+	file { "/etc/nginx/nginx.conf":
+		ensure	=> present,
+		mode	=> 644,
+		owner		=> root,
+		group		=> root,
 		content => template("nginx/nginx.conf.erb"),
-		notify 	=> Exec["reload-nginx"],
+		notify	=> Exec["reload-nginx"],
 		require => Package["nginx"],
-        }
+	}
 
 	file { $nginx_conf:
 		ensure => directory,
@@ -80,8 +80,8 @@ class nginx {
 
 	exec { "reload-nginx":
 		command => "/etc/init.d/nginx reload",
-                refreshonly => true,
-        }
+		refreshonly => true,
+	}
 
 	# Define: nginx::config
 	#
@@ -94,20 +94,21 @@ class nginx {
 	# * content: set the content of the config snipppet. Defaults to 'template("nginx/${name}.conf.erb")'
 	# * order: specifies the load order for this config snippet. Defaults to "500"
 	#
-        define config ( $ensure = 'present', $content = '', $order="500") {
-          $real_content = $content ? { '' => template("nginx/${name}.conf.erb"),
-            default => $content,
-          }
+	define config ( $ensure = 'present', $content = '', $order="500") {
+		$real_content = $content ? { 
+			'' => template("nginx/${name}.conf.erb"),
+			default => $content,
+		}
 
-          file { "${nginx_conf}/${order}-${name}.conf":
-		ensure => $ensure,
-		content => $real_content,
-		mode => 644,
-		owner => root,
-		group => root,
-		notify => Exec["reload-nginx"],
-    		}
-        }
+		file { "${nginx_conf}/${order}-${name}.conf":
+			ensure => $ensure,
+			content => $real_content,
+			mode => 644,
+			owner => root,
+			group => root,
+			notify => Exec["reload-nginx"],
+		}
+	}
 
 	# Define: nginx::site
 	#
@@ -122,7 +123,7 @@ class nginx {
 		case $ensure {
 			'present' : {
 				nginx::install_site { $name:
-		  			content => $content
+						content => $content
 				}
 			}
 			'absent' : {
@@ -143,7 +144,7 @@ class nginx {
 	# This definition is private, not intended to be called directly
 	#
 	define install_site ($content = '' ) {
-	  # first, make sure the site config exists
+		# first, make sure the site config exists
 		case $content {
 			'': {
 				file { "/etc/nginx/sites-available/${name}":
@@ -152,29 +153,29 @@ class nginx {
 					group => root,
 					ensure => present,
 					alias => "sites-$name",
-				  	require => Package["nginx"],
-				  	notify => Exec["reload-nginx"],
+						require => Package["nginx"],
+						notify => Exec["reload-nginx"],
 				}
 			}
 
 			default: {
-				  file { "/etc/nginx/sites-available/${name}":
-				  	content => $content,
-				  	mode => 644,
-				  	owner => root,
-				  	group => root,
-				      	ensure => present,
-				      	alias => "sites-$name",
-				  	require => Package["nginx"],
-				  	notify => Exec["reload-nginx"],
+					file { "/etc/nginx/sites-available/${name}":
+						content => $content,
+						mode => 644,
+						owner => root,
+						group => root,
+								ensure => present,
+								alias => "sites-$name",
+						require => Package["nginx"],
+						notify => Exec["reload-nginx"],
 				}
 			}
 		}
 
-	  # now, enable it.
+		# now, enable it.
 		exec { "ln -s /etc/nginx/sites-available/${name} /etc/nginx/sites-enabled/${name}":
 			unless => "/bin/sh -c '[ -L /etc/nginx/sites-enabled/$name ] \\
-                                                                && [ /etc/nginx/sites-enabled/$name -ef /etc/nginx/sites-available/$name ]'",
+							&& [ /etc/nginx/sites-enabled/$name -ef /etc/nginx/sites-available/$name ]'",
 			notify => Exec["reload-nginx"],
 			require => File["sites-$name"],
 		}
@@ -197,7 +198,7 @@ class nginx {
 			ensure => $ensure,
 			require => File["${nginx_includes}"],
 			notify => Exec["reload-nginx"],
-		}    
+		}
 	}
 
 
